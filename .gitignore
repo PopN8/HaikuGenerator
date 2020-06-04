@@ -5,10 +5,13 @@
 ### Personal ###
 .venv
 .vscode
+*.log
 full_random.txt
+markov_random_haiku.txt
 haiku_occ.txt
 haikus.txt
 wordstats.json
+haiku_occ.json
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
