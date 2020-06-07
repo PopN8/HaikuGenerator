@@ -177,7 +177,7 @@ def markov_random_haiku() -> str:
 if __name__ == "__main__":
     with open('haiku_occ.json', 'w') as f:
         json.dump(markov_instance_dict(), f)
-    """
+
     try:
         haiku = markov_random_haiku()
         print(haiku)
@@ -197,6 +197,6 @@ if __name__ == "__main__":
         traceback.print_exc()
     finally:
         input()
-
+    """
     #with open('full_random.txt', 'a') as f:
     #    f.write(f'{full_random_haiku()}\n\n')
