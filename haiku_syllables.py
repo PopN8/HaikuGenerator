@@ -77,8 +77,9 @@ def full_random_line(max_syl: int, syl_word_dict: dict, lst = [], syl=0) -> list
     """
     if syl == max_syl:
         return lst
-
-    next_syl = randint(1, max_syl - syl)
+    if (syl_max := max_syl - syl) == 7:
+        syl_max = 6
+    next_syl = randint(1, syl_max)
     word_list = syl_word_dict[next_syl]
     word = word_list[randint(0, len(word_list) - 1)]
 
@@ -99,93 +100,11 @@ def full_random_haiku() -> str:
     return f'{first_line}\n{second_line}\n{third_line}'
 
 
-def markov_random_line(max_syl: int, first_words_lst: list, word_syl_dict: dict, markov_dict: dict, lst = [], syl=0) -> list:
+def markov_line(max_syl: int, word_syl_dict: dict, markov_dict: dict, lst: list, syl=0) -> list:
     """
     Returns a line using a dict organized as a markov chain.
-    May return None therefore seeding must be ajusted
+    Returns None if no line can be made
     :param max_syl: Syllable length of the line.
-    :param first_words_lst: list of all first words from haikus.
-    :param word_syl_dict: dictionnary of words with their syllable count.
-    :param markov_dict: markov chain dictionary.
-    :param lst: list of words currently in the line.
-    :param syl: Current syllable count.
-    """
-    if syl == max_syl:
-        return lst
-
-    if syl == 0:
-        word = first_words_lst[randint(0, len(first_words_lst) - 1)]
-        next_syl = word_syl_dict[word.lower()][randint(0, len(word_syl_dict[word.lower()]) - 1)]
-        return markov_random_line(max_syl, first_words_lst, word_syl_dict, markov_dict, lst + [word.lower()], syl + next_syl)
-
-    if syl > max_syl:
-        return None
-
-    logging.debug(lst)
-    word_pool = markov_dict[lst[len(lst) - 1]].copy()
-    while word_pool:
-        word = word_pool.pop(randint(0, len(word_pool) - 1))
-        word_syls = word_syl_dict[word.lower()].copy()
-        while word_syls:
-            next_syl = word_syls.pop(randint(0, len(word_syls) - 1))
-            next_line = markov_random_line(max_syl, first_words_lst, word_syl_dict, markov_dict, lst + [word.lower()], syl + next_syl)
-            # print(next_line)
-            if next_line is not None:
-                # print(next_line)
-                return next_line
-
-    return None
-
-
-def markov_random_line_2(max_syl: int, first_words_lst: list, word_syl_dict: dict, markov_dict: dict, lst = []) -> list:
-    first_words_dict = dict((k, word_syl_dict[k]) for k in first_words_lst)
-
-    while first_words_dict:
-        word = random.choice(list(first_words_dict))
-        lst[0] = word
-        syl = first_words_dict[word][randint(0, len(first_words_dict[word.lower()]) - 1)]
-
-        if syl == max_syl:
-            return lst
-
-        first_words_dict[word].remove(syl)
-
-        if syl > max_syl:
-            continue
-
-        if not first_words_dict[word]:
-            first_words_dict.pop(word)
-
-        while syl < max_syl:
-            word_pool = markov_dict[word].copy()
-
-            # While current word candidates are not empty
-            while word_pool:
-                word = word_pool.pop(randint(0, len(word_pool) - 1))
-                word_syls = word_syl_dict[word.lower()].copy()
-
-                # While next word candidate has available syllable counts
-                while word_syls:
-                    word_syl = word_syls.pop(randint(0, len(word_syls) - 1))
-                    if syl + word_syl > max_syl:
-                        continue
-
-                    lst.append(word)
-                    syl += word_syl
-                    if syl == max_syl:
-                        return lst
-
-                    break
-
-                # word_pool.remove(word)
-
-
-def markov_random_line3(max_syl: int, word_syl_dict: dict, markov_dict: dict, lst: list, syl=0) -> list:
-    """
-    Returns a line using a dict organized as a markov chain.
-    May return None therefore seeding must be ajusted
-    :param max_syl: Syllable length of the line.
-    :param first_words_lst: list of all first words from haikus.
     :param word_syl_dict: dictionnary of words with their syllable count.
     :param markov_dict: markov chain dictionary.
     :param lst: list of words currently in the line.
@@ -204,22 +123,21 @@ def markov_random_line3(max_syl: int, word_syl_dict: dict, markov_dict: dict, ls
         word_syls = word_syl_dict[word.lower()].copy()
         while word_syls:
             next_syl = word_syls.pop(randint(0, len(word_syls) - 1))
-            next_line = markov_random_line3(max_syl, word_syl_dict, markov_dict, lst + [word.lower()], syl + next_syl)
+            next_line = markov_line(max_syl, word_syl_dict, markov_dict, lst + [word.lower()], syl + next_syl)
             if next_line is not None:
                 return next_line
 
     return None
 
 
-def markov_first_word(max_syl: int, first_words_lst: list, word_syl_dict: dict, markov_dict: dict, syl=0) -> list:
+def markov_random_line(max_syl: int, first_words_lst: list, word_syl_dict: dict, markov_dict: dict, syl=0) -> list:
     """
     Returns a line using a dict organized as a markov chain.
-    May return None therefore seeding must be ajusted
+    Returns None if something breaks
     :param max_syl: Syllable length of the line.
     :param first_words_lst: list of all first words from haikus.
     :param word_syl_dict: dictionnary of words with their syllable count.
     :param markov_dict: markov chain dictionary.
-    :param lst: list of words currently in the line.
     :param syl: Current syllable count.
     """
     while first_words_lst:
@@ -231,7 +149,7 @@ def markov_first_word(max_syl: int, first_words_lst: list, word_syl_dict: dict, 
 
             if next_syl > max_syl:
                 continue
-            line = markov_random_line3(max_syl, word_syl_dict, markov_dict, [word.lower()], next_syl)
+            line = markov_line(max_syl, word_syl_dict, markov_dict, [word.lower()], next_syl)
 
             if line is None:
                 continue
@@ -239,21 +157,6 @@ def markov_first_word(max_syl: int, first_words_lst: list, word_syl_dict: dict, 
                 return line
 
     return None
-
-
-def markov_random_haiku2() -> str:
-    markov_dict, first_words = markov_instance_dict()
-    word_syl_dict, syl_word_dict = syllable_dict(markov_dict.keys())
-
-    fl = markov_first_word(5, first_words, word_syl_dict, markov_dict)
-    sl = markov_first_word(7, first_words, word_syl_dict, markov_dict)
-    tl = markov_first_word(5, first_words, word_syl_dict, markov_dict)
-    print(f'{fl}\n{sl}\n{tl}')
-    first_line = ' '.join(fl)
-    second_line = ' '.join(sl)
-    third_line = ' '.join(tl)
-
-    return f'{first_line}\n{second_line}\n{third_line}'
 
 
 def markov_random_haiku() -> str:
@@ -288,22 +191,12 @@ if __name__ == "__main__":
     finally:
         input()
     """
-
     try:
-        haiku = markov_random_haiku2()
-        print(haiku)
-        logging.debug(haiku)
-
-        with open('markov_random_haiku.txt', 'a') as f:
-            f.write(f'{haiku}\n\n')
+        print(full_random_haiku())
     except:
         traceback.print_exc()
-        logging.exception('Exception in haiku handling')
     finally:
         input()
-
-    #print(len(markov_instance_dict().keys()))
-    #input()
 
     #with open('full_random.txt', 'a') as f:
     #    f.write(f'{full_random_haiku()}\n\n')
